@@ -1,4 +1,4 @@
-# fl-lighting-bug-fix
+# FL Lighting Bug Fix
 Yet another [lighting bug](https://www.moddb.com/games/freelancer/downloads/freelancer-broken-interior-lighting-fix) fix for the game Freelancer. This one is implemented by directly hooking the `IDirect3DDevice8::SetLight` call in Freelancer's render pipeline. As a result, the implementation is entirely plugin-based and does not make use of any DirectX hooks (d3d8.dll). Hence this fix is easier to combine with existing DirectX-related enhancements such as the [Subtitles project](https://the-starport.com/forums/topic/6015/subtitles-revisited-beta).
 
 ## Installation instructions
