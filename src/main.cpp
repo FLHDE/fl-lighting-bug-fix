@@ -67,19 +67,25 @@ public:
         if (lightEdit.Type == D3DLIGHT_SPOT)
         {
             // The fixed-function emulation in Windows 10 2004+ computes the spot factor in the
-            // shader as pow((rho - cos(Phi/2)) / (cos(Theta/2) - cos(Phi/2)), Falloff), without the
-            // guard older runtimes applied when both cosines are equal, so such a light turns its
-            // whole cone fully bright. Theta == Phi is a hard-edged cone; Theta = 0 with a vanishing
-            // Falloff describes the same cone without dividing by zero (not 0, as pow(0, 0) may be
-            // NaN on runtimes that clamp the outside of the cone to exactly 0).
-            if ((float) cos(lightEdit.Theta * 0.5f) == (float) cos(lightEdit.Phi * 0.5f))
+            // shader as pow((rho - cos(Phi/2)) / (cos(Theta/2) - cos(Phi/2)), Falloff) without
+            // clamping the ratio to 1 (and without the guard older runtimes applied when both
+            // cosines are equal), so the inner cone gets brighter than legacy D3D8 and a light
+            // with Theta == Phi turns its whole cone fully bright. With Theta = 0 the ratio never
+            // exceeds 1; a Falloff equal to the legacy ramp's share of the cone, a / W, makes
+            // pow(x / W, a / W) follow legacy's min(x / a, 1) closely (exactly for Theta == Phi
+            // and Theta == 0). Assumes the original Falloff is 1, as for all of Freelancer's lights.
+            if (lightEdit.Theta <= lightEdit.Phi && lightEdit.Phi > 0.0f)
             {
+                const float cosTheta = (float) cos(lightEdit.Theta * 0.5f);
+                const float cosPhi = (float) cos(lightEdit.Phi * 0.5f);
+                float falloff = (cosTheta - cosPhi) / (1.0f - cosPhi);
+
+                // Not 0: pow(0, 0) may be NaN on runtimes that clamp the outside of the cone to 0.
+                if (falloff < 1e-6f)
+                    falloff = 1e-6f;
+
                 lightEdit.Theta = 0.0f;
-                lightEdit.Falloff = 1e-6f;
-            }
-            else if (lightEdit.Theta <= lightEdit.Phi)
-            {
-                lightEdit.Theta /= 1.75f;
+                lightEdit.Falloff = falloff;
             }
         }
 
