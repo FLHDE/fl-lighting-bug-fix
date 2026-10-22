@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <d3d8.h>
+#include <math.h>
 
 void Patch(DWORD vOffset, LPVOID mem, UINT len)
 {
@@ -65,7 +66,18 @@ public:
 
         if (lightEdit.Type == D3DLIGHT_SPOT)
         {
-            if (lightEdit.Theta <= lightEdit.Phi)
+            // The fixed-function emulation in Windows 10 2004+ computes the spot factor in the
+            // shader as pow((rho - cos(Phi/2)) / (cos(Theta/2) - cos(Phi/2)), Falloff), without the
+            // guard older runtimes applied when both cosines are equal, so such a light turns its
+            // whole cone fully bright. Theta == Phi is a hard-edged cone; Theta = 0 with a vanishing
+            // Falloff describes the same cone without dividing by zero (not 0, as pow(0, 0) may be
+            // NaN on runtimes that clamp the outside of the cone to exactly 0).
+            if ((float) cos(lightEdit.Theta * 0.5f) == (float) cos(lightEdit.Phi * 0.5f))
+            {
+                lightEdit.Theta = 0.0f;
+                lightEdit.Falloff = 1e-6f;
+            }
+            else if (lightEdit.Theta <= lightEdit.Phi)
             {
                 lightEdit.Theta /= 1.75f;
             }
