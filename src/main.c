@@ -18,15 +18,16 @@ DWORD oldProtect;
 
 typedef enum _D3DLIGHTTYPE
 {
-    D3DLIGHT_SPOT = 2,
+    D3DLIGHT_SPOT           = 2,
+    D3DLIGHT_FORCE_DWORD    = 0x7fffffff
 } D3DLIGHTTYPE;
 
 typedef struct _D3DLIGHT8
 {
-    DWORD Type;     // 0x00
+    D3DLIGHTTYPE Type;  // 0x00
     BYTE x04[0x5C];
-    float Theta;    // 0x60
-    float Phi;      // 0x64
+    float Theta;        // 0x60
+    float Phi;          // 0x64
 } D3DLIGHT8;
 
 typedef struct _IDirect3DDevice8 IDirect3DDevice8;
