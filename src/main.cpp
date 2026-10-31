@@ -15,43 +15,40 @@ DWORD oldProtect;
 #define SET_LIGHT_CALL_F_OF 0xCEF9
 
 #define D3DERR_INVALIDCALL  (0x8876086C)
-#define D3DLIGHT_SPOT       (2)
 
-struct D3DLIGHT8
+typedef enum _D3DLIGHTTYPE
+{
+    D3DLIGHT_SPOT = 2,
+} D3DLIGHTTYPE;
+
+typedef struct _D3DLIGHT8
 {
     DWORD Type;     // 0x00
     BYTE x04[0x5C];
     float Theta;    // 0x60
     float Phi;      // 0x64
-};
+} D3DLIGHT8;
 
-#define FILL_VFTABLE(tensPlace) \
-    virtual void Vftable_x ##tensPlace## 0(); \
-    virtual void Vftable_x ##tensPlace## 4(); \
-    virtual void Vftable_x ##tensPlace## 8(); \
-    virtual void Vftable_x ##tensPlace## C();
+typedef struct _IDirect3DDevice8 IDirect3DDevice8;
 
-class IDirect3DDevice8
+typedef long STDCALL SetD3d8Light(IDirect3DDevice8* device, DWORD Index, CONST D3DLIGHT8* pLight);
+
+typedef struct _IDirect3DDevice8VfTable
 {
-public:
-    FILL_VFTABLE(0)
-    FILL_VFTABLE(1)
-    FILL_VFTABLE(2)
-    FILL_VFTABLE(3)
-    FILL_VFTABLE(4)
-    FILL_VFTABLE(5)
-    FILL_VFTABLE(6)
-    FILL_VFTABLE(7)
-    FILL_VFTABLE(8)
-    FILL_VFTABLE(9)
-    FILL_VFTABLE(A)
+    BYTE x00[0xB0];
+    SetD3d8Light* SetLightFunc; // 0xB0
+} IDirect3DDevice8VfTable;
 
-    virtual long STDCALL SetLight(DWORD Index, CONST D3DLIGHT8* pLight); // 0xB0
-};
+typedef struct _IDirect3DDevice8
+{
+    IDirect3DDevice8VfTable* vftable;
+} IDirect3DDevice8;
 
 // Implementation is based on https://github.com/crosire/d3d8to9/blob/3e293ca7f834c3c46f0bd8c688255bd2087449df/source/d3d8to9_device.cpp#L719
 long STDCALL SetD3d8Light_Hook(IDirect3DDevice8* device, DWORD Index, CONST D3DLIGHT8* pLight)
 {
+    D3DLIGHT8 lightEdit;
+
     if (pLight == NULL)
         return D3DERR_INVALIDCALL;
 
@@ -59,14 +56,14 @@ long STDCALL SetD3d8Light_Hook(IDirect3DDevice8* device, DWORD Index, CONST D3DL
     {
         if (pLight->Theta <= pLight->Phi)
         {
-            D3DLIGHT8 lightEdit = *pLight;
+            lightEdit = *pLight;
             lightEdit.Theta /= 1.75f;
 
-            return device->SetLight(Index, &lightEdit);
+            return device->vftable->SetLightFunc(device, Index, &lightEdit);
         }
     }
 
-    return device->SetLight(Index, pLight);
+    return device->vftable->SetLightFunc(device, Index, pLight);
 }
 
 void Init()
@@ -76,6 +73,7 @@ void Init()
     if (rp8Handle)
     {
         VirtualProtectX(rp8Handle + SET_LIGHT_CALL_F_OF, 6);
+
         CALL(rp8Handle + SET_LIGHT_CALL_F_OF, SetD3d8Light_Hook);
         *(PBYTE) (rp8Handle + SET_LIGHT_CALL_F_OF + 5) = 0x90;
     }
