@@ -13,14 +13,14 @@ OBJ_FILES = $(OBJ_DIR)\main.obj
 
 OUTPUT_FILE = $(BIN_DIR)\LightingBugFix.dll
 
-CPP_FLAGS = /c /O2 /nologo /W3 /WX /LD /MD
+C_FLAGS = /c /O2 /nologo /W3 /WX /LD /MD
 LD_FLAGS = /DLL /FILEALIGN:512 /NOLOGO /RELEASE
 
 $(OUTPUT_FILE): $(OBJ_FILES) $(RES_FILE) $(BIN_DIR)
     link $(OBJ_FILES) $(RES_FILE) $(LD_FLAGS) /OUT:$(OUTPUT_FILE)
 
-{$(SRC_DIR)}.cpp{$(OBJ_DIR)}.obj::
-    $(CPP) $(CPP_FLAGS) $< -I$(INCLUDE_DIR) /Fo./$(OBJ_DIR)/
+{$(SRC_DIR)}.c{$(OBJ_DIR)}.obj::
+    $(CC) $(C_FLAGS) $< -I$(INCLUDE_DIR) /Fo./$(OBJ_DIR)/
 
 $(OBJ_FILES): makefile
 
