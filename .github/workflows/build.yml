@@ -1,0 +1,39 @@
+name: Build release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: plugin
+          ref: ${{ github.ref }}
+
+      - name: Checkout VC6 build tools
+        uses: actions/checkout@v6
+        with:
+          repository: FLHDE/VC6-SP6-Enterprise
+          path: VC6
+
+      - name: Build plugin with VC6
+        run: |
+          call "${{ github.workspace }}\VC6\VC98\Bin\VCVARS32.BAT"
+          cd plugin
+          nmake /nologo
+
+      - name: Upload release build as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Release build
+          path: |
+            plugin/bin/*.dll
