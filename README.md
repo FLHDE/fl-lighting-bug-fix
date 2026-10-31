@@ -5,6 +5,6 @@ Yet another [lighting bug](https://www.moddb.com/games/freelancer/downloads/free
 Download the latest `LightingBugFix.dll` from [Releases](https://github.com/FLHDE/fl-lighting-bug-fix/releases). Extract the `dll` to the `EXE` folder of your Freelancer installation. Next, open the `dacom.ini` file and append `LightingBugFix.dll` to the `[Libraries]` section.
 
 ## Build instructions
-Build the project using the `NMAKE` tool from Microsoft Visual C++ 7.0 (VC7) + the VC6 runtime libraries (you may also need the D3D8 header files).
+Build the project using the `NMAKE` tool from Microsoft Visual C++ 6.0.
 This will output the `LightingBugFix.dll` file in the `bin` folder.
 Building the project using other compilers may require the code to be modified.
