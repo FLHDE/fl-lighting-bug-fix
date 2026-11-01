@@ -32,12 +32,12 @@ typedef struct _D3DLIGHT8
 
 typedef struct _IDirect3DDevice8 IDirect3DDevice8;
 
-typedef long STDCALL SetD3d8Light(IDirect3DDevice8* device, DWORD Index, CONST D3DLIGHT8* pLight);
+typedef long STDCALL SetD3d8LightFunc(IDirect3DDevice8* pDevice, DWORD Index, CONST D3DLIGHT8* pLight);
 
 typedef struct _IDirect3DDevice8VfTable
 {
     BYTE x00[0xB0];
-    SetD3d8Light* SetLightFunc; // 0xB0
+    SetD3d8LightFunc* SetLight; // 0xB0
 } IDirect3DDevice8VfTable;
 
 typedef struct _IDirect3DDevice8
@@ -46,7 +46,7 @@ typedef struct _IDirect3DDevice8
 } IDirect3DDevice8;
 
 // Implementation is based on https://github.com/crosire/d3d8to9/blob/3e293ca7f834c3c46f0bd8c688255bd2087449df/source/d3d8to9_device.cpp#L719
-long STDCALL SetD3d8Light_Hook(IDirect3DDevice8* device, DWORD Index, CONST D3DLIGHT8* pLight)
+long STDCALL SetD3d8Light_Hook(IDirect3DDevice8* pDevice, DWORD Index, CONST D3DLIGHT8* pLight)
 {
     D3DLIGHT8 lightEdit;
 
@@ -60,11 +60,11 @@ long STDCALL SetD3d8Light_Hook(IDirect3DDevice8* device, DWORD Index, CONST D3DL
             lightEdit = *pLight;
             lightEdit.Theta /= 1.75f;
 
-            return device->vftable->SetLightFunc(device, Index, &lightEdit);
+            return pDevice->vftable->SetLight(pDevice, Index, &lightEdit);
         }
     }
 
-    return device->vftable->SetLightFunc(device, Index, pLight);
+    return pDevice->vftable->SetLight(pDevice, Index, pLight);
 }
 
 void Init()
